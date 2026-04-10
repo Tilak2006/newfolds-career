@@ -171,12 +171,29 @@ export default function Careers() {
   const [scrolled, setScrolled] = useState(false);
   const revealRefs = useRef([]);
 
-  // Spotlight state
-  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+  // Spotlight fluid state
+  const spotlightRef = useRef(null);
+  const targetPos = useRef({ x: -1000, y: -1000 });
+  const currentPos = useRef({ x: -1000, y: -1000 });
 
   const handleHeroMouseMove = useCallback((e) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    targetPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }, []);
+
+  useEffect(() => {
+    let frame;
+    const animate = () => {
+      currentPos.current.x += (targetPos.current.x - currentPos.current.x) * 0.08;
+      currentPos.current.y += (targetPos.current.y - currentPos.current.y) * 0.08;
+      
+      if (spotlightRef.current) {
+        spotlightRef.current.style.transform = `translate(${currentPos.current.x}px, ${currentPos.current.y}px)`;
+      }
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   // Hero auto-rotate
@@ -307,7 +324,7 @@ export default function Careers() {
 
       {/* HERO */}
       <header className="nf-hero" onMouseMove={handleHeroMouseMove}>
-        <div className="nf-hero-spotlight" style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px)` }} aria-hidden="true" />
+        <div ref={spotlightRef} className="nf-hero-spotlight" aria-hidden="true" />
         <div className="nf-mesh" aria-hidden="true">
           <span className="nf-mesh-blob nf-mesh-blob-1" />
           <span className="nf-mesh-blob nf-mesh-blob-2" />
